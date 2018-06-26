@@ -1,0 +1,72 @@
+\documentclass[11pt]{article}
+
+\title{Numerical stability of motion estimation in fMRI time series}
+
+\author{Tristan Glatard, Pierre Bellec}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Micro-movements Power. Review paper Power.
+
+Bootstrap is promising but fixing the algorithms would be better.
+
+% Reproducibility, including OS
+
+% Replicability
+
+
+\section{Methods}
+
+% Dataset and one-voxel perturbation
+We randomly selected 680 datasets from 34 sites of the CoRR dataset, 
+corresponding to 543 subjects with $TR \in [0.645s, 3.0s]$ and number 
+of volumes in $[120, 899]$. On each dataset, we applied a one-voxel 
+perturbation similar to~\cite{lindsay}: we randomly selected a non-zero 
+voxel in a 30-mm box centered at the center of the image, and we 
+increased its intensity by 1\%, rounded to the nearest integer as the 
+datasets were encoded as unsigned integers.
+
+% Motion estimation methods + bootstrap.
+We estimated the motion parameters at each volume of the initial and 
+perturbated datasets using (1) FSL \texttt{mcflirt} 5.0.6, (2) SPM12 
+\texttt{spm\_realign}, (3) AFNI \texttt{3dvolreg} 18.1.26 and (4) NIAK 
+cog. to the initial and perturbated datasets. All methods were 
+configured to estimate the 6 motion parameters with respect to the 
+first volume in the dataset. We also computed a bootstraped version of 
+Niak and FSL, in which we executed 30 repetitions of the initial method 
+after having applied an extra one-voxel perturbation in addition to the 
+initial one. The bootstrap result was computed as the average 
+transformation from the 30 samples, that is, from the averages of the 6 
+parameters of the 30 transformations.
+
+For each dataset, we calculated the frame displacement (FD) measure 
+proposed by~\cite{power2012spurious} on $T_1oT_2^{-1}$, where $T_1$ and $T_2$ were 
+the transformations independently estimated on the initial and 
+perturbated datasets.
+
+
+
+% FD of T1oT2-1, Dice of scrubbed volumes
+
+\section{Results}
+
+% Correlations between FD values
+
+% Effect of perturbation by algorithm (FD, Dice of scrubbed volumes)
+
+% Effect of perturbation by site (FD, Dice of scrubbed volumes)
+
+% Effect of perturbation by TR value (FD, Dice of scrubbed volumes)
+
+% Distribution of bootstrap estimates
+
+\section{Discussion}
+
+Accuracy needs to be discussed.
+
+
+\end{document}
