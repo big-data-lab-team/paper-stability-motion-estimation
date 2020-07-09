@@ -1,3 +1,11 @@
+# Jul 9
+
+Back to experimentation. All bootstrap iterations are identical, 
+presumably due to nibabel update (one voxel doesn't do anything any more).
+Updated one-voxel, relaunched bootstrap experiment on Graham yesterday.
+
+Back to writing, updated references and intro.
+
 # Apr 23
 
 Exceeded file quota on graham, targzing CorrBIDS-one-voxel and CorrBIDS-one-voxel-rep1
