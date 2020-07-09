@@ -16,59 +16,87 @@ $^3$ Département de psychologie, Université de Montréal, Montreal, Canada.
 
 \maketitle
 
+\begin{abstract}
+    \begin{itemize}
+        \item The importance of reproducibility studies, in particular in fMRI 
+        \item The context of computational reproducibility
+        \item What we did
+        \item Summary of the results 
+        \item What it implies and what's next
+    \end{itemize}
+\end{abstract}
+
 \section{Introduction}
 
  The analysis of a functional MRI dataset by multiple, independent, skilled
  experimenters has recently been shown to substantially impact the
- biological conclusions drawn from the dataset~\cite{narps}, creating
+ biological conclusions drawn from the dataset~\cite{botvinik2020variability}, creating
  flutter in the neuroscience community. The causes for this apparent lack
- of reproducibility originate in the complexity of fMRI analysis, and in
+ of reproducibility originate in the complexity of fMRI data, and in
  the resulting methodological flexibility. Hundreds of different analysis
- pipelines are plausible~\cite{carp}, resulting in substantially different
- activation maps~\cite{bowring}. A better understanding of this variability
+ pipelines are plausible~\cite{carp2012plurality}, resulting in substantially different
+ activation maps~\cite{bowring2019exploring, Pauli et al 2016 inside} computed from the same data. A better understanding of this variability
  is required.
 
  Besides, there is evidence that many neuroimaging pipelines, including
  fMRI ones, are not stable to small numerical perturbations introduced by
  variations in operating system libraries~\cite{gronenschild2012effects,
- glatard2015reproducibility}, in floating-point computations~\cite{greg},
- or in the data itself~\cite{lindsay}. It is plausible that such numerical
+ glatard2015reproducibility}, in floating-point computations~\cite{kiar2020comparing},
+ or in the data itself~\cite{Lewis2017-ll}, and it is plausible that such numerical
  instabilities contribute substantially to the broader lack of
- reproducibility. These studies, however, are limited to the coarse scale
+ reproducibility acknowledged in the scientific community~\cite{kennedy2019everything, baker2016reproducibility}. 
+ These previous studies, however, are focused on the coarse scale
  of complete analysis pipelines and provide limited insight on the root
  causes of such instabilities and on their effect on specific components of
  the analysis.
 
- This paper investigates the stability of motion estimation in fMRI
- datasets, one of the most crucial component of fMRI pre-processing, used
- as regressor in most contemporary analyses. Numerical instabilities may
- compromise the estimation of micro motions which have raised substantial
- concerns as being a potential source of spurious
- connectivity~\cite{power2012spurious}. We study the effect of a small,
- controlled numerical perturbation on motion estimation in fMRI time
- series.
+ This paper investigates the stability of motion estimation in fMRI data
+ pre-processing. It is a first step at understanding the sources of
+ numerical uncertainty in fMRI analysis. Motion estimation is one of the
+ most crucial component of fMRI pre-processing, used as regressor in most
+ contemporary analyses. Several studies highlighted its importance in fMRI
+ analysis, with important consequences on the detected
+ activation~\cite{OAKES2005529}.
+ The methods and implementations available in the most popular toolboxes,
+ namely AFNI, FSL and SPM, were evaluated and compared~\cite{OAKES2005529, comparisons}
+ but these analyses mostly focused on accuracy and ignored numerical
+ stability which is our main focus here. In addition to their impact on
+ reproducibility, numerical instabilities may compromise the estimation of
+ micro motions which have raised substantial concerns as being a potential
+ source of spurious connectivity~\cite{power2012spurious}. We study the
+ effect of a small, controlled numerical perturbation on motion estimation
+ in fMRI time series.
 
- Results variability, in our case resulting from numerical instabilities, 
- can be approached from two perspectives. On the 
+ Results variability, in our case resulting from numerical instabilities,
+ can be approached from two complementary perspectives. On the one hand,
+ instability is often considered detrimental, hampering reproducibility,
+ increasing uncertainty, and most likely reducing accuracy. On the other
+ hand, as exemplified by ensemble learning, and in particular Random
+ Forests~\cite{breiman1996bagging, breiman2001random},  
+ instabile estimates are also an opportunity for improved accuracy through
+ aggregation, an idea that was recently employed to improve the
+ reproducibility of functional brain parcellation through bagging
+ (bootstrap aggregation)
+ ~\cite{NIKOLAIDIS2020116678}.
+ Stemming from this distinction, we present two attempts to address the
+ instabilities found in motion estimation tools. First, we correct
+ instabilities algorithmically, by breaking its propagation through chained
+ initialization across fMRI sequences. Second, we aggregate unstable
+ estimates provided by the same tool. Both approaches are shown to be
+ capable of substantially reducing instability.
 
- why no formal analysis of conditioning is possible.
+ Numerical instability is traditionnally studied through formal analyses of
+ conditioning, which is limited to simple models and doesn't take software
+ implementation or data distributions into account. Instead, we adopt an
+ experimental approach and study the impact of negligible perturbations,
+ namely one-voxel noise, on the processing of 500+ subjects from 30+
+ acquisition sites actual software implementations.
+ 
+ 
 
-Bootstrap is promising but fixing the algorithms would be better.
+% check afni\_proc.py
 
-Put this in the larger context of analytical variability, Carp et al, Bowring et al 2018 (and Pauli et al 2016 inside).
-This is an attempt to explain where differences are coming from.
 
-check afni\_proc.py
-
-one-voxel perturbation can be seen as a simulation of small perturbations that might creep in, for instance due to the OS, 
-etc
-
-Joshua's paper on bootstrap
-
-% Reproducibility, including OS
-
-% Replicability
-\todo{Check all links}
 
 \newpage
 
@@ -205,17 +233,21 @@ For FSL, average max $\Delta$ FDs are consistent across sites (\todo{[x, y]}). F
 
 % Distribution of bootstrap estimates
 
+% Accuracy isn't our issue
+
 \section{Discussion}
 
 % Don't use FSL or Niak
 
-
+% Effect of dataset
 
 % Need for large scale evaluations (effect of subject, site)
 
 % Accuracy
 
 % one-voxel vs MCA
+
+% THis is not limited to fMRI
 
 \bibliographystyle{plain}
 \bibliography{biblio.bib}
