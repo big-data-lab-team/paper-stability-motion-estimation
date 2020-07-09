@@ -3,6 +3,15 @@
 \usepackage{todonotes}
 \usepackage{hyperref}
 
+% Fix link colors
+\hypersetup{
+    colorlinks = true,
+    linkcolor=red,
+    citecolor=red,
+    urlcolor=blue,
+    linktocpage % so that page numbers are clickable in toc
+}
+
 \title{Numerical stability of motion estimation\\ in fMRI time series}
 
 \author{Tristan Glatard$^1$ and Pierre Bellec$^{2,3}$\\
@@ -73,7 +82,7 @@ $^3$ Département de psychologie, Université de Montréal, Montreal, Canada.
  increasing uncertainty, and most likely reducing accuracy. On the other
  hand, as exemplified by ensemble learning, and in particular Random
  Forests~\cite{breiman1996bagging, breiman2001random},  
- instabile estimates are also an opportunity for improved accuracy through
+ unstable estimates are also an opportunity for improved accuracy through
  aggregation, an idea that was recently employed to improve the
  reproducibility of functional brain parcellation through bagging
  (bootstrap aggregation)
@@ -90,15 +99,12 @@ $^3$ Département de psychologie, Université de Montréal, Montreal, Canada.
  implementation or data distributions into account. Instead, we adopt an
  experimental approach and study the impact of negligible perturbations,
  namely one-voxel noise, on the processing of 500+ subjects from 30+
- acquisition sites actual software implementations.
+ acquisition sites actual software implementations. The remainder of this paper 
+ details our methods and results, and discuss their implications.
  
  
 
 % check afni\_proc.py
-
-
-
-\newpage
 
 \section{Methods}
 
