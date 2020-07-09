@@ -1,8 +1,16 @@
-\documentclass[11pt]{article}
+\documentclass[11pt]{IEEEtran}
 
-\title{Numerical stability of motion estimation in fMRI time series}
+\usepackage{todonotes}
+\usepackage{hyperref}
 
-\author{Tristan Glatard, Pierre Bellec}
+\title{Numerical stability of motion estimation\\ in fMRI time series}
+
+\author{Tristan Glatard$^1$ and Pierre Bellec$^{2,3}$\\
+$^1$ Department of Computer Science and Software Engineering, Concordia University, Montreal, Canada. \\
+$^2$ Centre de recherche de l'Institut universitaire de gériatrie de Montréal (CRIUGM), Montreal, Canada.\\
+$^3$ Département de psychologie, Université de Montréal, Montreal, Canada.
+
+}
 
 \begin{document}
 
@@ -10,49 +18,182 @@
 
 \section{Introduction}
 
-Micro-movements Power. Review paper Power.
+ The analysis of a functional MRI dataset by multiple, independent, skilled
+ experimenters has recently been shown to substantially impact the
+ biological conclusions drawn from the dataset~\cite{narps}, creating
+ flutter in the neuroscience community. The causes for this apparent lack
+ of reproducibility originate in the complexity of fMRI analysis, and in
+ the resulting methodological flexibility. Hundreds of different analysis
+ pipelines are plausible~\cite{carp}, resulting in substantially different
+ activation maps~\cite{bowring}. A better understanding of this variability
+ is required.
+
+ Besides, there is evidence that many neuroimaging pipelines, including
+ fMRI ones, are not stable to small numerical perturbations introduced by
+ variations in operating system libraries~\cite{gronenschild2012effects,
+ glatard2015reproducibility}, in floating-point computations~\cite{greg},
+ or in the data itself~\cite{lindsay}. It is plausible that such numerical
+ instabilities contribute substantially to the broader lack of
+ reproducibility. These studies, however, are limited to the coarse scale
+ of complete analysis pipelines and provide limited insight on the root
+ causes of such instabilities and on their effect on specific components of
+ the analysis.
+
+ This paper investigates the stability of motion estimation in fMRI
+ datasets, one of the most crucial component of fMRI pre-processing, used
+ as regressor in most contemporary analyses. Numerical instabilities may
+ compromise the estimation of micro motions which have raised substantial
+ concerns as being a potential source of spurious
+ connectivity~\cite{power2012spurious}. We study the effect of a small,
+ controlled numerical perturbation on motion estimation in fMRI time
+ series.
+
+ Results variability, in our case resulting from numerical instabilities, 
+ can be approached from two perspectives. On the 
+
+ why no formal analysis of conditioning is possible.
 
 Bootstrap is promising but fixing the algorithms would be better.
+
+Put this in the larger context of analytical variability, Carp et al, Bowring et al 2018 (and Pauli et al 2016 inside).
+This is an attempt to explain where differences are coming from.
+
+check afni\_proc.py
+
+one-voxel perturbation can be seen as a simulation of small perturbations that might creep in, for instance due to the OS, 
+etc
+
+Joshua's paper on bootstrap
 
 % Reproducibility, including OS
 
 % Replicability
+\todo{Check all links}
 
+\newpage
 
 \section{Methods}
 
-% Dataset and one-voxel perturbation
-We randomly selected 680 datasets from 34 sites of the CoRR dataset, 
-corresponding to 543 subjects with $TR \in [0.645s, 3.0s]$ and number 
-of volumes in $[120, 899]$. On each dataset, we applied a one-voxel 
-perturbation similar to~\cite{lindsay}: we randomly selected a non-zero 
-voxel in a 30-mm box centered at the center of the image, and we 
-increased its intensity by 1\%, rounded to the nearest integer as the 
-datasets were encoded as unsigned integers.
+The scripts and data derivatives used in this experiment are available at
+\url{https://github.com/big-data-lab-team/one-voxel-motion-correction} and
+referred throughout this section for further inspection and
+reproducibility.
 
+\paragraph{Dataset}
+We used the dataset released by the Consortium for Reliability and
+Reproducibility (CoRR)~\cite{zuo2014open}, an open dataset for
+reproducibility and test-retest evaluations in functional connectomics.
+CoRR was assembled retrospectively from laboratories around the world, as a
+retrospective data collection to benchmark reproducibility across
+acquisition sites. We randomly selected 20 datasets in 34 of the 35 sites
+(site Utah\_2 was excluded due to \todo{check}), resulting in a total of 680
+datasets corresponding to 543 subjects (435 subjects with 1 session, 93
+with 2 sessions, 13 with 3 sessions, 1 with 9 sessions, and 1 with 11
+sessions). All data types were 16-bit integers. Table~\ref{table:data}
+summarizes acquisition parameters by site (see also
+\href{https://github.com/big-data-lab-team/one-voxel-motion-correction/data\_summary.csv}{data\_summary.csv}).
+We used the CoRR dataset as released by the DataLad portal at
+\url{http://datasets.datalad.org} (commit 6e52fa0d, Feb 12 2018).
+
+% Site   & \# Datasets & \# Subjects & Acquisition matrix & \# Slices                           & \# Volumes & TR (s) \\
+% \hline 
+% BMB\_1 & 20          & 15          & 64 $\times$ 64     & 34                                  & 200                                   & 2.3 \\
+% BNU\_1 & 20          & 20          & 64 $\times$ 64     & 33                                  & 200                                   & 2.0 \\
+% BNU\_2 & 20          & 17          & 64 $\times$ 64     & 25 (10 datasets) ; 33 (10 datasets) & 240 (10 datasets) ; 420 (10 datasets) & n/a \\
+% BNU\_3 & 20          & 17          & 64 $\times$ 64     & 33                                  & 53 (1 dataset) ; 240 (19 datasets     & 2.0 \\
+% DC\_1  & 20          & 19          & 80 $\times$ 80     & 36                                  & 120                                   & 2.5 \\
+% HNU\_1 & 20          & 17          & 64 $\times$ 64     & 43                                  & 300                                   & 2.0 \\
+% IACAS  & 20          & 17          & 64 $\times$ 64     & 32                                  & 240                                   & 2.0 \\
+% IBA\_TRT & 20        & 17          & 64 $\times$ 64     & 29                                  & 224 (11 datasets) ; 343 (9 datasets)  & 1.75 \\
+% IPCAS\_1 & 20        & 16          & 64 $\times$ 64     & 32                                  & 205                                   & 2.0 \\
+% IPCAS\_2 & 20        & 17          & 64 $\times$ 64     & 32                                  & 212                                   & 2.5 \\
+% IPCAS\_3 (\todo{check}) \\
+% IPCAS\_4 & 20        & 17          & 64 $\times$ 64     & 32                                  & 212                                   & 2.5 \\
+
+
+\paragraph{One-voxel perturbation.} On each dataset, we applied a one-voxel
+perturbation similar to the one used in~\cite{lindsay}: for each volume in
+the dataset, we randomly selected a non-zero voxel in a 30-voxel box
+centered at the center of the image, and we increased its intensity by 1\%,
+rounded to the nearest integer
+(\href{https://github.com/big-data-lab-team/one-voxel-motion-correction/blob/master/ovmc/one_voxel.py}{one\_voxel.py}).
+This perturbation is assumed to be insignificant for motion estimation
+processes and it is therefore used to simulate two independent realizations of
+it. 
+
+\todo{Verificarlo for FSL and AFNI?}
+\todo{Operating system noise?}
+
+\paragraph{Motion estimation methods.}
 % Motion estimation methods + bootstrap.
-We estimated the motion parameters at each volume of the initial and 
-perturbated datasets using (1) FSL \texttt{mcflirt} 5.0.6, (2) SPM12 
-\texttt{spm\_realign}, (3) AFNI \texttt{3dvolreg} 18.1.26 and (4) NIAK 
-cog. to the initial and perturbated datasets. All methods were 
-configured to estimate the 6 motion parameters with respect to the 
-first volume in the dataset. We also computed a bootstraped version of 
-Niak and FSL, in which we executed 30 repetitions of the initial method 
-after having applied an extra one-voxel perturbation in addition to the 
-initial one. The bootstrap result was computed as the average 
-transformation from the 30 samples, that is, from the averages of the 6 
-parameters of the 30 transformations.
+We estimated motion parameters at each volume of the initial and
+perturbated datasets using (1) FSL \texttt{mcflirt} 5.0.6, (2) SPM12
+\texttt{spm\_realign}, (3) AFNI \texttt{3dvolreg} 18.1.26 and (4) NIAK
+cog~\cite{niak}. SPM and Niak were both executed with Octave 4.2.1, with
+\texttt{spm\_realign} embedded as a ``brick'' in the Niak engine. FSL and
+AFNI were compiled binaries. All methods were configured to estimate the 6
+motion parameters with respect to the first volume in the dataset, and we otherwrise used
+default parameters for all methods (see \href{https://github.com/big-data-lab-team/one-voxel-motion-correction/blob/master/ovmc/ovmc.py}{ovmc.py}).
+ All the tools were installed in a
+Singularity container built from Ubuntu 16.04, available on DockerHub at
+\texttt{bigdatalabteam/one-voxel-motion-correction} and executed on the
+Graham cluster of the Compute Canada infrastructure (Singularity v3.5.2,
+Linux 3.10, CentOS 7.5). \todo{a bit more on default parameters?}
 
-For each dataset, we calculated the frame displacement (FD) measure 
-proposed by~\cite{power2012spurious} on $T_1oT_2^{-1}$, where $T_1$ and $T_2$ were 
-the transformations independently estimated on the initial and 
-perturbated datasets.
+\paragraph{Unchained variant.} We implemented an ``unchained'' version of
+motion estimation in Niak, where transformations were estimated
+independently for each volume instead of using the estimation of volume $i$
+to initialize the estimation of volume $i+1$ as is the case in Niak cog.
+Indeed we suspected that chained initializations would propagate and
+possibly amplify uncertainty throughout successive estimations in the
+dataset.
 
+\paragraph{Bootstrap aggregation.} We computed a ``bootstraped" motion
+estimate for all algorithms, obtained as the mean among 30 independent
+repetitions of the original algorithm after having applied an extra
+one-voxel perturbation to the perturbed dataset. To compute the mean
+estimate, we simply averaged the 6 motion parameters among the 30
+transformations \todo{check that, I think it's only valid for small
+motion}. 
 
+\paragraph{Uncertainty measurement.}
+For each dataset, we measured $\Delta FD$, the frame displacement (FD) 
+measure proposed by~\cite{power2012spurious}, calculated on 
+$T_1oT_2^{-1}$, where $T_1$ and $T_2$ were the transformations 
+independently estimated on the initial and perturbed datasets. 
 
-% FD of T1oT2-1, Dice of scrubbed volumes
 
 \section{Results}
+
+% Overall results
+The processing of 22 datasets failed with at least one algorithm; these
+datasets were excluded for all algorithms. Figure~\ref{fig:delta-fds}
+plots the maximum $\Delta$ FD values measured across dataset volumes, per
+site and algorithm. Overall, SPM and AFNI show excellent stability, with
+max $\Delta$FD values in the \todo{x} range for all sites. On the contrary,
+FSL and Niak are highly impacted by one-voxel perturbation for all sites, with average
+max $\Delta$ FDs of \todo{x}~mm (FSL) and \todo{y}~mm (Niak). These values
+are surprisingly high, considering that FD values of 0.2~mm are commonly
+considered as high movement, a threshold used for instance when scrubbing
+volumes~\cite{scrubbing}. The unchained implementation of Niak is found to
+be more stable than Niak, with an average max $\Delta$ FDs of \todo{x}~mm.
+It is also more stable than FSL in 29 sites \todo{show statistical significance of difference between unchained and Niak and FSL}.
+
+% Site-dependence
+For FSL, average max $\Delta$ FDs are consistent across sites (\todo{[x, y]}). For Niak, however, values varies across sites
+(in \todo{[x, y]}). 
+
+
+
+
+\begin{figure*}
+    \begin{center}
+    \includegraphics[height=\textheight]{figures/delta.pdf}
+    \caption{Max $\Delta$FD values measuring the effect of one-voxel perturbation per dataset, site and algorithm.
+    For site DC\_1, results are shown for only 1 dataset as processing for the other 19 failed for at least 1 algorithm.}
+    \end{center}
+    \label{fig:delta-fds}
+\end{figure*}
 
 % Correlations between FD values
 
@@ -66,7 +207,21 @@ perturbated datasets.
 
 \section{Discussion}
 
-Accuracy needs to be discussed.
+% Don't use FSL or Niak
 
 
+
+% Need for large scale evaluations (effect of subject, site)
+
+% Accuracy
+
+% one-voxel vs MCA
+
+\bibliographystyle{plain}
+\bibliography{biblio.bib}
+
+\section{Acknowledgment}
+
+We warmly thank Compute Canada and SHARCNET at Compute Ontario for
+providing the computing infrastructure and support required for this work. 
 \end{document}
